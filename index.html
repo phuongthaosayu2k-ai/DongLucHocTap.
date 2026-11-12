@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Pro - Đồng hành chinh phục kỳ thi</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Be Vietnam Pro & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Be Vietnam Pro"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        darkbg: '#0b111e',
+                        sidebar: '#0f172a',
+                        card: '#161f30',
+                        cardhover: '#1c273c',
+                        bordercol: '#233047',
+                        cyanbrand: '#22d3ee',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0b111e;
+            color: #f1f5f9;
+            overflow-x: hidden;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b111e;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #233047;
+            border-radius: 999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #38bdf8;
+        }
+        /* Cyan Gradient Banner giống ảnh mẫu */
+        .cyan-banner-gradient {
+            background: linear-gradient(90deg, #38bdf8 0%, #22d3ee 50%, #67e8f9 100%);
+            box-shadow: 0 10px 30px -10px rgba(34, 211, 238, 0.35);
+        }
+        .sidebar-active {
+            background: linear-gradient(90deg, #22d3ee 0%, #38bdf8 100%);
+            color: #090d16;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(34, 211, 238, 0.25);
+        }
+        .card-surface {
+            background-color: #161f30;
+            border: 1px solid #233047;
+            transition: all 0.2s ease;
+        }
+        .card-surface:hover {
+            border-color: #334666;
+        }
+        /* Custom date input icon color */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(34, 211, 238, 0.2); }
+            50% { box-shadow: 0 0 25px rgba(34, 211, 238, 0.5); }
+        }
+        .glow-effect {
+            animation: pulse-glow 3s infinite;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-cyan-400 selection:text-slate-950">
+
+    <!-- Toast Notification Container (Thay thế alert) -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Mobile Header -->
+    <div class="lg:hidden flex items-center justify-between px-4 py-3 bg-[#0f172a] border-b border-[#233047] sticky top-0 z-30">
+        <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-400 to-blue-500 flex items-center justify-center text-slate-950 font-bold shadow-md">
+                <i data-lucide="swords" class="w-5 h-5"></i>
+            </div>
+            <span class="font-bold text-lg tracking-tight text-white">Study <span class="text-cyan-400">Pro</span></span>
+        </div>
+        <button id="mobile-menu-btn" class="p-2 rounded-lg bg-[#161f30] text-slate-300 hover:text-white border border-[#233047]">
+            <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+    </div>
+
+    <!-- Overlay cho Mobile Sidebar -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-30 hidden lg:hidden"></div>
+
+    <div class="flex min-h-screen">
+        <!-- SIDEBAR -->
+        <aside id="sidebar" class="fixed lg:sticky top-0 left-0 z-40 h-screen w-64 bg-[#0f172a] border-r border-[#1e293b] flex flex-col justify-between transition-transform duration-300 -translate-x-full lg:translate-x-0 shrink-0">
+            <div>
+                <!-- Brand Logo -->
+                <div class="p-6 flex items-center justify-between">
+                    <div class="flex items-center gap-2.5 cursor-pointer" onclick="switchTab('overview')">
+                        <div class="w-8 h-8 rounded-lg bg-cyan-400/15 border border-cyan-400/30 flex items-center justify-center text-cyan-400">
+                            <i data-lucide="swords" class="w-5 h-5"></i>
+                        </div>
+                        <span class="font-extrabold text-xl tracking-tight text-white">Study <span class="text-cyan-400">Pro</span></span>
+                    </div>
+                    <button id="close-sidebar-btn" class="lg:hidden text-slate-400 hover:text-white">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- Navigation Menu -->
+                <nav class="px-3 space-y-1.5" id="nav-menu">
+                    <button data-tab="overview" class="nav-item sidebar-active w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all">
+                        <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                        <span>Tổng quan</span>
+                    </button>
+                    <button data-tab="todo" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-[#161f30] transition-all">
+                        <i data-lucide="check-square" class="w-4 h-4 text-emerald-400"></i>
+                        <span>To do list</span>
+                    </button>
+                    <button data-tab="schedule" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-[#161f30] transition-all">
+                        <i data-lucide="calendar-days" class="w-4 h-4 text-sky-400"></i>
+                        <span>Lịch học</span>
+                    </button>
+                    <button data-tab="focus" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-[#161f30] transition-all">
+                        <i data-lucide="target" class="w-4 h-4 text-rose-400"></i>
+                        <span>Focus</span>
+                    </button>
+                    <button data-tab="mocktest" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-[#161f30] transition-all">
+                        <i data-lucide="file-spreadsheet" class="w-4 h-4 text-amber-400"></i>
+                        <span>Mocktest</span>
+                    </button>
+                    <button data-tab="goals" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-[#161f30] transition-all">
+                        <i data-lucide="medal" class="w-4 h-4 text-orange-400"></i>
+                        <span>Mục tiêu</span>
+                    </button>
+                    <button data-tab="rank" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-[#161f30] transition-all">
+                        <i data-lucide="trophy" class="w-4 h-4 text-yellow-400"></i>
+                        <span>Rank</span>
+                    </button>
+                    <button data-tab="settings" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-[#161f30] transition-all">
+                        <i data-lucide="settings" class="w-4 h-4 text-slate-400"></i>
+                        <span>Cài đặt</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- User Profile Mini Card ở đáy Sidebar -->
+            <div class="p-4 border-t border-[#1e293b]">
+                <div onclick="switchTab('rank')" class="flex items-center gap-3 p-2.5 rounded-xl bg-[#161f30] border border-[#233047] hover:border-cyan-400/50 cursor-pointer transition-all">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-300 to-sky-500 flex items-center justify-center text-yellow-300 shadow-inner shrink-0">
+                        <i data-lucide="sun" class="w-6 h-6 fill-amber-300 text-amber-400"></i>
+                    </div>
+                    <div class="overflow-hidden">
+                        <div class="text-sm font-bold text-white truncate sidebar-username">Chiến binh</div>
+                        <div class="text-xs text-slate-400 flex items-center gap-1 truncate">
+                            <span class="text-cyan-400 font-medium" id="sidebar-level">Lv.4</span>
+                            <span>•</span>
+                            <span id="sidebar-realm">Vô Thế</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+            
+            <!-- Top Header Bar -->
+            <header class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                <div>
+                    <h1 id="page-title" class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Tổng quan</h1>
+                    <p id="current-date-subtitle" class="text-xs text-slate-400 mt-0.5">Hôm nay là ngày tuyệt vời để bứt phá giới hạn</p>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <button onclick="shareProgress()" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#161f30] hover:bg-[#1e293b] text-slate-200 text-sm font-medium border border-[#233047] transition-all cursor-pointer">
+                        <i data-lucide="share-2" class="w-4 h-4 text-cyan-400"></i>
+                        <span>Chia sẻ</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- ========================================== -->
+            <!-- TAB 1: TỔNG QUAN (OVERVIEW)                -->
+            <!-- ========================================== -->
+            <section id="tab-overview" class="tab-content space-y-5">
+                
+                <!-- 1. Thẻ Profile Chiến Binh & Thanh XP (Giống hệt ảnh mẫu) -->
+                <div class="card-surface rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center gap-5">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-300 via-sky-400 to-blue-500 flex items-center justify-center shrink-0 shadow-lg shadow-cyan-500/20">
+                        <i data-lucide="sun" class="w-9 h-9 fill-amber-300 text-amber-400 drop-shadow"></i>
+                    </div>
+                    <div class="flex-1 w-full">
+                        <div class="flex flex-wrap items-center gap-2.5 mb-2">
+                            <h2 class="text-xl font-bold text-white sidebar-username">Chiến binh</h2>
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1">
+                                <i data-lucide="shield" class="w-3 h-3 text-cyan-400"></i> <span id="profile-realm">VÔ THẾ</span>
+                            </span>
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-500/15 text-orange-400 border border-orange-500/30 flex items-center gap-1">
+                                🔥 <span id="profile-streak-badge">1 NGÀY</span>
+                            </span>
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 flex items-center gap-1">
+                                ⭐ <span id="profile-xp-badge">236 XP</span>
+                            </span>
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                                🪙 <span id="profile-coins-badge">29</span>
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs font-semibold text-slate-400 mb-1.5">
+                            <span id="profile-level-text" class="tracking-wider uppercase text-slate-300">LEVEL 4</span>
+                            <span id="profile-xp-progress-text" class="font-mono">44 / 80</span>
+                        </div>
+                        <div class="w-full h-2.5 bg-[#0b111e] rounded-full overflow-hidden border border-[#233047]">
+                            <div id="profile-xp-bar" class="h-full bg-gradient-to-r from-cyan-400 to-sky-400 rounded-full transition-all duration-500" style="width: 55%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Banner ĐẾM NGƯỢC NGÀY QUAN TRỌNG (Màu Cyan sáng rực giống ảnh) -->
+                <div class="cyan-banner-gradient rounded-2xl p-6 text-slate-950 relative overflow-hidden">
+                    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="text-xs font-extrabold tracking-widest uppercase text-white/95 drop-shadow-xs">
+                                    ĐẾM NGƯỢC NGÀY QUAN TRỌNG • <span id="hero-exam-name" class="underline decoration-white/60">TỐT NGHIỆP THPTQG</span>
+                                </span>
+                            </div>
+                            <div class="flex flex-wrap items-baseline gap-3 sm:gap-5 font-mono">
+                                <div class="flex items-baseline gap-1">
+                                    <span id="hero-days" class="text-4xl sm:text-5xl font-extrabold text-white tracking-tight drop-shadow-xs">210</span>
+                                    <span class="text-xs sm:text-sm font-bold text-white/90">ngày</span>
+                                </div>
+                                <div class="flex items-baseline gap-1">
+                                    <span id="hero-hours" class="text-4xl sm:text-5xl font-extrabold text-white tracking-tight drop-shadow-xs">00</span>
+                                    <span class="text-xs sm:text-sm font-bold text-white/90">giờ</span>
+                                </div>
+                                <div class="flex items-baseline gap-1">
+                                    <span id="hero-minutes" class="text-4xl sm:text-5xl font-extrabold text-white tracking-tight drop-shadow-xs">17</span>
+                                    <span class="text-xs sm:text-sm font-bold text-white/90">phút</span>
+                                </div>
+                                <div class="flex items-baseline gap-1">
+                                    <span id="hero-seconds" class="text-4xl sm:text-5xl font-extrabold text-white tracking-tight drop-shadow-xs">46</span>
+                                    <span class="text-xs sm:text-sm font-bold text-white/90">giây</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-start md:items-end justify-between gap-2">
+                            <span class="text-xs font-bold bg-slate-950/15 text-white px-3 py-1 rounded-full backdrop-blur-xs">
+                                🎯 Mục tiêu tâm điểm
+                            </span>
+                            <select id="hero-exam-selector" onchange="changeHeroExam(this.value)" class="bg-slate-950/20 hover:bg-slate-950/30 text-white text-xs font-bold px-3 py-2 rounded-xl border border-white/30 outline-none cursor-pointer">
+                                <option value="thpt" class="text-slate-900">Kỳ thi: Tốt nghiệp THPTQG</option>
+                                <option value="hsa" class="text-slate-900">Kỳ thi: ĐGNL HSA (ĐHQGHN)</option>
+                                <option value="spt" class="text-slate-900">Kỳ thi: ĐGNL SPT (ĐHSPHN)</option>
+                                <option value="ielts" class="text-slate-900">Kỳ thi: Chứng chỉ IELTS</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Decorative subtle circles -->
+                    <div class="absolute -right-10 -bottom-10 w-44 h-44 bg-white/15 rounded-full pointer-events-none"></div>
+                    <div class="absolute right-24 -top-12 w-28 h-28 bg-white/10 rounded-full pointer-events-none"></div>
+                </div>
+
+                <!-- 3. WIDGET 100 CÂU ĐỘNG LỰC HỌC TẬP MỖI NGÀY -->
+                <div class="card-surface rounded-2xl p-5 border-l-4 border-l-cyan-400 relative overflow-hidden">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-1 rounded-lg bg-cyan-400/15 text-cyan-400 text-xs font-bold flex items-center gap-1.5">
+                                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                                <span>ĐỘNG LỰC MỖI NGÀY</span>
+                            </span>
+                            <span id="quote-number-badge" class="text-xs font-mono text-slate-400 bg-[#0b111e] px-2.5 py-1 rounded-lg border border-[#233047]">
+                                Câu #1 / 100
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="prevQuote()" title="Câu trước" class="p-1.5 rounded-lg bg-[#0b111e] hover:bg-slate-800 text-slate-400 hover:text-cyan-400 border border-[#233047] transition-colors cursor-pointer">
+                                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="randomQuote()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0b111e] hover:bg-slate-800 text-xs font-semibold text-cyan-400 border border-[#233047] transition-colors cursor-pointer">
+                                <i data-lucide="shuffle" class="w-3.5 h-3.5"></i>
+                                <span>Đổi câu khác</span>
+                            </button>
+                            <button onclick="copyCurrentQuote()" title="Sao chép câu nói" class="p-1.5 rounded-lg bg-[#0b111e] hover:bg-slate-800 text-slate-400 hover:text-white border border-[#233047] transition-colors cursor-pointer">
+                                <i data-lucide="copy" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <blockquote class="text-base sm:text-lg font-medium text-slate-100 leading-relaxed italic">
+                        “<span id="daily-quote-text">Đang tải câu nói truyền cảm hứng...</span>”
+                    </blockquote>
+                    <div class="mt-2 flex items-center justify-between text-xs text-slate-400">
+                        <span id="daily-quote-author" class="font-semibold text-cyan-400/90">— Khuyết danh</span>
+                        <span class="text-[11px] text-slate-500">Tự động làm mới mỗi ngày theo lịch</span>
+                    </div>
+                </div>
+
+                <!-- 4. Hàng 4 Thẻ Thống Kê Nhanh (Hôm nay, Chuỗi ngày, Tổng thời gian, Pomodoros) -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="card-surface rounded-2xl p-4 sm:p-5">
+                        <div class="w-8 h-8 rounded-lg bg-slate-800/80 flex items-center justify-center text-slate-300 mb-3">
+                            <i data-lucide="timer" class="w-4 h-4 text-cyan-400"></i>
+                        </div>
+                        <div id="stat-today" class="text-2xl font-extrabold text-white">0m</div>
+                        <div class="text-xs text-slate-400 mt-1">Hôm nay</div>
+                    </div>
+                    <div class="card-surface rounded-2xl p-4 sm:p-5">
+                        <div class="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center mb-3">
+                            <span class="text-base">🔥</span>
+                        </div>
+                        <div id="stat-streak" class="text-2xl font-extrabold text-white">1 ngày</div>
+                        <div class="text-xs text-slate-400 mt-1">Chuỗi ngày</div>
+                    </div>
+                    <div class="card-surface rounded-2xl p-4 sm:p-5">
+                        <div class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center mb-3">
+                            <span class="text-base">⏳</span>
+                        </div>
+                        <div id="stat-total-hours" class="text-2xl font-extrabold text-white">10.1h</div>
+                        <div class="text-xs text-slate-400 mt-1">Tổng thời gian</div>
+                    </div>
+                    <div class="card-surface rounded-2xl p-4 sm:p-5">
+                        <div class="w-8 h-8 rounded-lg bg-rose-500/10 flex items-center justify-center mb-3">
+                            <span class="text-base">🍅</span>
+                        </div>
+                        <div id="stat-pomodoros" class="text-2xl font-extrabold text-white">0</div>
+                        <div class="text-xs text-slate-400 mt-1">Pomodoros</div>
+                    </div>
+                </div>
+
+                <!-- 5. Khu vực ĐẾM NGƯỢC CÁC KỲ THI (HSA, SPT, Tốt nghiệp THPTQG, IELTS) -->
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                            <i data-lucide="calendar-clock" class="w-4 h-4 text-cyan-400"></i>
+                            <span>Lịch đếm ngược các kỳ thi trọng điểm</span>
+                        </h3>
+                        <span class="text-xs text-slate-500 hidden sm:inline">Bấm "Chỉnh ngày" để cập nhật lịch thi của bạn</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4" id="exams-grid">
+                        <!-- Card 1: HSA -->
+                        <div class="card-surface rounded-2xl p-5 flex flex-col justify-between relative group">
+                            <div>
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-2 py-0.5 rounded-md text-[11px] font-extrabold bg-cyan-400 text-slate-950">HSA</span>
+                                        <span class="font-bold text-sm text-white">ĐGNL ĐHQGHN</span>
+                                    </div>
+                                    <button onclick="setHeroExamFromCard('hsa')" title="Đặt làm đếm ngược chính" class="text-slate-500 hover:text-cyan-400 transition-colors cursor-pointer">
+                                        <i data-lucide="pin" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                                <div class="flex items-baseline gap-2 my-1">
+                                    <span id="days-left-hsa" class="text-4xl font-extrabold text-white font-mono">109</span>
+                                    <span class="text-xs text-slate-400">ngày còn lại</span>
+                                </div>
+                                <div class="text-xs text-cyan-400/90 font-mono mt-1 flex items-center gap-1.5">
+                                    <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                                    <span id="date-display-hsa">01/03/2027</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-[#233047]/80">
+                                <button onclick="toggleDatePicker('hsa')" class="px-3 py-1.5 rounded-lg bg-[#233047] hover:bg-cyan-400 hover:text-slate-950 text-xs font-semibold text-slate-200 transition-all cursor-pointer">
+                                    Chỉnh ngày
+                                </button>
+                                <div id="picker-box-hsa" class="hidden mt-2.5">
+                                    <input type="date" id="input-date-hsa" onchange="updateExamDate('hsa', this.value)" class="w-full bg-[#0b111e] border border-cyan-400/50 rounded-lg px-3 py-1.5 text-xs text-white outline-none">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: SPT -->
+                        <div class="card-surface rounded-2xl p-5 flex flex-col justify-between relative group">
+                            <div>
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-2 py-0.5 rounded-md text-[11px] font-extrabold bg-emerald-400 text-slate-950">SPT</span>
+                                        <span class="font-bold text-sm text-white">ĐGNL ĐHSPHN</span>
+                                    </div>
+                                    <button onclick="setHeroExamFromCard('spt')" title="Đặt làm đếm ngược chính" class="text-slate-500 hover:text-emerald-400 transition-colors cursor-pointer">
+                                        <i data-lucide="pin" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                                <div class="flex items-baseline gap-2 my-1">
+                                    <span id="days-left-spt" class="text-4xl font-extrabold text-white font-mono">145</span>
+                                    <span class="text-xs text-slate-400">ngày còn lại</span>
+                                </div>
+                                <div class="text-xs text-emerald-400/90 font-mono mt-1 flex items-center gap-1.5">
+                                    <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                                    <span id="date-display-spt">06/04/2027</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-[#233047]/80">
+                                <button onclick="toggleDatePicker('spt')" class="px-3 py-1.5 rounded-lg bg-[#233047] hover:bg-emerald-400 hover:text-slate-950 text-xs font-semibold text-slate-200 transition-all cursor-pointer">
+                                    Chỉnh ngày
+                                </button>
+                                <div id="picker-box-spt" class="hidden mt-2.5">
+                                    <input type="date" id="input-date-spt" onchange="updateExamDate('spt', this.value)" class="w-full bg-[#0b111e] border border-emerald-400/50 rounded-lg px-3 py-1.5 text-xs text-white outline-none">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: Tốt nghiệp THPTQG -->
+                        <div class="card-surface rounded-2xl p-5 flex flex-col justify-between relative group">
+                            <div>
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-2 py-0.5 rounded-md text-[11px] font-extrabold bg-rose-400 text-slate-950">THPT</span>
+                                        <span class="font-bold text-sm text-white">Tốt nghiệp THPTQG</span>
+                                    </div>
+                                    <button onclick="setHeroExamFromCard('thpt')" title="Đặt làm đếm ngược chính" class="text-slate-500 hover:text-rose-400 transition-colors cursor-pointer">
+                                        <i data-lucide="pin" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                                <div class="flex items-baseline gap-2 my-1">
+                                    <span id="days-left-thpt" class="text-4xl font-extrabold text-white font-mono">210</span>
+                                    <span class="text-xs text-slate-400">ngày còn lại</span>
+                                </div>
+                                <div class="text-xs text-rose-400/90 font-mono mt-1 flex items-center gap-1.5">
+                                    <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                                    <span id="date-display-thpt">11/06/2027</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-[#233047]/80">
+                                <button onclick="toggleDatePicker('thpt')" class="px-3 py-1.5 rounded-lg bg-[#233047] hover:bg-rose-400 hover:text-slate-950 text-xs font-semibold text-slate-200 transition-all cursor-pointer">
+                                    Chỉnh ngày
+                                </button>
+                                <div id="picker-box-thpt" class="hidden mt-2.5">
+                                    <input type="date" id="input-date-thpt" onchange="updateExamDate('thpt', this.value)" class="w-full bg-[#0b111e] border border-rose-400/50 rounded-lg px-3 py-1.5 text-xs text-white outline-none">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 4: IELTS -->
+                        <div class="card-surface rounded-2xl p-5 flex flex-col justify-between relative group">
+                            <div>
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-2 py-0.5 rounded-md text-[11px] font-extrabold bg-sky-400 text-slate-950">IEL</span>
+                                        <span class="font-bold text-sm text-white">IELTS</span>
+                                    </div>
+                                    <button onclick="setHeroExamFromCard('ielts')" title="Đặt làm đếm ngược chính" class="text-slate-500 hover:text-sky-400 transition-colors cursor-pointer">
+                                        <i data-lucide="pin" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                                <div class="flex items-baseline gap-2 my-1">
+                                    <span id="days-left-ielts" class="text-4xl font-extrabold text-white font-mono">81</span>
+                                    <span class="text-xs text-slate-400">ngày còn lại</span>
+                                </div>
+                                <div class="text-xs text-sky-400/90 font-mono mt-1 flex items-center gap-1.5">
+                                    <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                                    <span id="date-display-ielts">01/02/2027</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-[#233047]/80">
+                                <button onclick="toggleDatePicker('ielts')" class="px-3 py-1.5 rounded-lg bg-[#233047] hover:bg-sky-400 hover:text-slate-950 text-xs font-semibold text-slate-200 transition-all cursor-pointer">
+                                    Chỉnh ngày
+                                </button>
+                                <div id="picker-box-ielts" class="hidden mt-2.5">
+                                    <input type="date" id="input-date-ielts" onchange="updateExamDate('ielts', this.value)" class="w-full bg-[#0b111e] border border-sky-400/50 rounded-lg px-3 py-1.5 text-xs text-white outline-none">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. Hàng cuối: Hoạt động tuần này & Theo môn học (Giống ảnh mẫu) -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                    <!-- Hoạt động tuần này -->
+                    <div class="lg:col-span-7 card-surface rounded-2xl p-5">
+                        <div class="flex items-center justify-between mb-5">
+                            <h3 class="font-bold text-white flex items-center gap-2">
+                                <i data-lucide="bar-chart-3" class="w-4 h-4 text-cyan-400"></i>
+                                <span>Hoạt động tuần này</span>
+                            </h3>
+                            <span class="text-xs text-slate-400">Đơn vị: phút học</span>
+                        </div>
+                        <div class="h-44 flex items-end justify-between gap-2 sm:gap-4 pt-4 px-2" id="weekly-chart">
+                            <!-- Render bằng JS -->
+                        </div>
+                    </div>
+
+                    <!-- Theo môn học -->
+                    <div class="lg:col-span-5 card-surface rounded-2xl p-5">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-white flex items-center gap-2">
+                                <i data-lucide="book-open" class="w-4 h-4 text-purple-400"></i>
+                                <span>Theo môn học</span>
+                            </h3>
+                            <button onclick="switchTab('focus')" class="text-xs text-cyan-400 hover:underline cursor-pointer">+ Học ngay</button>
+                        </div>
+                        <div class="space-y-3.5" id="subject-stats-list">
+                            <!-- Render bằng JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- TAB 2: TO DO LIST                          -->
+            <!-- ========================================== -->
+            <section id="tab-todo" class="tab-content hidden space-y-5">
+                <div class="card-surface rounded-2xl p-5">
+                    <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <i data-lucide="list-todo" class="w-5 h-5 text-emerald-400"></i>
+                        <span>Nhiệm vụ hôm nay (Hoàn thành nhận +15 XP)</span>
+                    </h2>
+                    <form onsubmit="addTodo(event)" class="flex flex-col sm:flex-row gap-3 mb-6">
+                        <input type="text" id="todo-input" placeholder="Nhập mục tiêu học tập (VD: Làm 1 đề HSA Toán, Học 30 từ vựng IELTS...)" class="flex-1 bg-[#0b111e] border border-[#233047] focus:border-cyan-400 rounded-xl px-4 py-3 text-sm text-white outline-none">
+                        <select id="todo-tag" class="bg-[#0b111e] border border-[#233047] rounded-xl px-3 py-3 text-sm text-slate-300 outline-none">
+                            <option value="HSA">HSA</option>
+                            <option value="SPT">SPT</option>
+                            <option value="THPTQG">THPTQG</option>
+                            <option value="IELTS">IELTS</option>
+                            <option value="Khác">Khác</option>
+                        </select>
+                        <button type="submit" class="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-400 to-sky-400 text-slate-950 font-bold text-sm hover:opacity-90 transition-opacity cursor-pointer shrink-0">
+                            + Thêm việc
+                        </button>
+                    </form>
+
+                    <div id="todo-list-container" class="space-y-2.5">
+                        <!-- Danh sách task render bằng JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- TAB 3: FOCUS (POMODORO TIMER)              -->
+            <!-- ========================================== -->
+            <section id="tab-focus" class="tab-content hidden">
+                <div class="max-w-xl mx-auto card-surface rounded-3xl p-6 sm:p-8 text-center glow-effect">
+                    <div class="inline-flex p-1 rounded-xl bg-[#0b111e] border border-[#233047] mb-6">
+                        <button onclick="setTimerMode('focus')" id="btn-mode-focus" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-cyan-400 text-slate-950 cursor-pointer">Tập trung (25p)</button>
+                        <button onclick="setTimerMode('short')" id="btn-mode-short" class="px-4 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white cursor-pointer">Nghỉ ngắn (5p)</button>
+                        <button onclick="setTimerMode('long')" id="btn-mode-long" class="px-4 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white cursor-pointer">Nghỉ dài (15p)</button>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="text-xs text-slate-400 block mb-1.5">Chọn môn đang ôn luyện:</label>
+                        <select id="focus-subject-select" class="bg-[#0b111e] border border-[#233047] text-cyan-400 font-semibold text-sm rounded-xl px-4 py-2 outline-none">
+                            <option value="HSA">Luyện đề HSA</option>
+                            <option value="SPT">Luyện đề SPT</option>
+                            <option value="Toán">Toán học</option>
+                            <option value="Vật Lý">Vật Lý</option>
+                            <option value="Hóa Học">Hóa Học</option>
+                            <option value="IELTS">Tiếng Anh / IELTS</option>
+                        </select>
+                    </div>
+
+                    <div id="timer-display" class="text-6xl sm:text-7xl font-extrabold font-mono text-white my-6 tracking-wider">
+                        25:00
+                    </div>
+
+                    <div class="flex items-center justify-center gap-3">
+                        <button id="timer-toggle-btn" onclick="toggleTimer()" class="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-400 to-sky-400 text-slate-950 font-extrabold text-base shadow-lg shadow-cyan-500/25 hover:scale-105 transition-transform cursor-pointer flex items-center gap-2">
+                            <i data-lucide="play" class="w-5 h-5 fill-slate-950"></i>
+                            <span>Bắt đầu</span>
+                        </button>
+                        <button onclick="resetTimer()" class="p-3.5 rounded-2xl bg-[#0b111e] border border-[#233047] text-slate-300 hover:text-white cursor-pointer" title="Đặt lại">
+                            <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                        </button>
+                        <button onclick="completePomodoroSession(true)" class="p-3.5 rounded-2xl bg-[#0b111e] border border-[#233047] text-emerald-400 hover:bg-emerald-500/10 cursor-pointer" title="Hoàn thành nhanh (Test +25p & +30XP)">
+                            <i data-lucide="check-circle" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-5">Hoàn thành mỗi phiên 25 phút để nhận <span class="text-cyan-400 font-bold">+30 XP</span> và cộng dồn thời gian học!</p>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- TAB 4: LỊCH HỌC                            -->
+            <!-- ========================================== -->
+            <section id="tab-schedule" class="tab-content hidden space-y-5">
+                <div class="card-surface rounded-2xl p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-bold text-white">Thời khóa biểu ôn thi mẫu</h2>
+                        <span class="text-xs text-cyan-400 bg-cyan-400/10 px-3 py-1 rounded-full font-semibold">Lộ trình nước rút</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="p-4 rounded-xl bg-[#0b111e] border border-[#233047]">
+                            <div class="text-xs font-bold text-cyan-400 uppercase mb-1">Buổi sáng (05:30 - 07:00)</div>
+                            <div class="font-bold text-white">Từ vựng IELTS & Đọc hiểu</div>
+                            <p class="text-xs text-slate-400 mt-1">Ôn 25 từ vựng học thuật + 1 bài Reading Passage.</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-[#0b111e] border border-[#233047]">
+                            <div class="text-xs font-bold text-emerald-400 uppercase mb-1">Buổi chiều (14:00 - 16:30)</div>
+                            <div class="font-bold text-white">Luyện đề Tư duy định lượng (HSA / SPT)</div>
+                            <p class="text-xs text-slate-400 mt-1">Bấm giờ chuẩn phòng thi 75 phút, chữa chi tiết lỗi sai.</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-[#0b111e] border border-[#233047]">
+                            <div class="text-xs font-bold text-amber-400 uppercase mb-1">Buổi tối (19:30 - 21:30)</div>
+                            <div class="font-bold text-white">Chuyên đề Vận dụng cao THPTQG</div>
+                            <p class="text-xs text-slate-400 mt-1">Tổng ôn Toán - Lý - Hóa theo từng chương trọng tâm.</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-[#0b111e] border border-[#233047]">
+                            <div class="text-xs font-bold text-purple-400 uppercase mb-1">Trước khi ngủ (22:00 - 22:30)</div>
+                            <div class="font-bold text-white">Review sổ tay lỗi sai & Lên To-do list</div>
+                            <p class="text-xs text-slate-400 mt-1">Ghi nhớ công thức hay quên và chuẩn bị cho ngày mai.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- TAB 5: MOCKTEST (LỊCH SỬ ĐIỂM THI THỬ)     -->
+            <!-- ========================================== -->
+            <section id="tab-mocktest" class="tab-content hidden space-y-5">
+                <div class="card-surface rounded-2xl p-5">
+                    <h2 class="text-lg font-bold text-white mb-4">Nhật ký điểm thi thử (Mocktest)</h2>
+                    <form onsubmit="addMocktest(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-6">
+                        <select id="mock-exam" class="bg-[#0b111e] border border-[#233047] rounded-xl px-3 py-2.5 text-sm text-white outline-none">
+                            <option value="HSA (Thang 150)">HSA (Thang 150)</option>
+                            <option value="SPT (Thang 10)">SPT (Thang 10)</option>
+                            <option value="THPTQG (Thang 30)">THPTQG (Thang 30)</option>
+                            <option value="IELTS (Band 9.0)">IELTS (Band 9.0)</option>
+                        </select>
+                        <input type="text" id="mock-title" placeholder="Tên đề (VD: Đề minh họa số 1)" required class="bg-[#0b111e] border border-[#233047] rounded-xl px-3 py-2.5 text-sm text-white outline-none">
+                        <input type="text" id="mock-score" placeholder="Điểm số (VD: 112/150 hoặc 7.5)" required class="bg-[#0b111e] border border-[#233047] rounded-xl px-3 py-2.5 text-sm text-white outline-none">
+                        <button type="submit" class="rounded-xl bg-cyan-400 text-slate-950 font-bold text-sm py-2.5 hover:bg-cyan-300 cursor-pointer">+ Lưu điểm</button>
+                    </form>
+                    <div id="mocktest-list" class="space-y-2.5">
+                        <!-- Render bằng JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- TAB 6: MỤC TIÊU                            -->
+            <!-- ========================================== -->
+            <section id="tab-goals" class="tab-content hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="card-surface rounded-2xl p-5 border-t-4 border-t-cyan-400">
+                        <span class="text-xs font-bold text-cyan-400 uppercase">Mục tiêu HSA</span>
+                        <h3 class="text-2xl font-extrabold text-white mt-1">115+ / 150 điểm</h3>
+                        <p class="text-xs text-slate-400 mt-2">Xét tuyển thẳng / Ưu tiên vào Đại học Quốc gia Hà Nội (UET, NEU, FTU).</p>
+                    </div>
+                    <div class="card-surface rounded-2xl p-5 border-t-4 border-t-emerald-400">
+                        <span class="text-xs font-bold text-emerald-400 uppercase">Mục tiêu SPT</span>
+                        <h3 class="text-2xl font-extrabold text-white mt-1">26.5+ điểm</h3>
+                        <p class="text-xs text-slate-400 mt-2">Chinh phục kỳ thi Đánh giá năng lực Đại học Sư phạm Hà Nội.</p>
+                    </div>
+                    <div class="card-surface rounded-2xl p-5 border-t-4 border-t-rose-400">
+                        <span class="text-xs font-bold text-rose-400 uppercase">Mục tiêu Tốt nghiệp THPTQG</span>
+                        <h3 class="text-2xl font-extrabold text-white mt-1">27.5+ Khối A00 / A01</h3>
+                        <p class="text-xs text-slate-400 mt-2">Vững vàng kiến thức nền tảng và bứt phá điểm 9+ từng môn.</p>
+                    </div>
+                    <div class="card-surface rounded-2xl p-5 border-t-4 border-t-sky-400">
+                        <span class="text-xs font-bold text-sky-400 uppercase">Mục tiêu IELTS</span>
+                        <h3 class="text-2xl font-extrabold text-white mt-1">Overall 7.5+</h3>
+                        <p class="text-xs text-slate-400 mt-2">Quy đổi điểm tiếng Anh và mở rộng cơ hội xét tuyển kết hợp.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- TAB 7: RANK (HỆ THỐNG CẤP BẬC CHIẾN BINH)  -->
+            <!-- ========================================== -->
+            <section id="tab-rank" class="tab-content hidden">
+                <div class="card-surface rounded-2xl p-6">
+                    <h2 class="text-lg font-bold text-white mb-2">Hệ thống Cảnh giới Tu luyện Học tập</h2>
+                    <p class="text-xs text-slate-400 mb-6">Tích lũy XP thông qua việc hoàn thành To-do list và các phiên học Pomodoro để thăng cấp!</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="rank-list">
+                        <!-- Render bằng JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================== -->
+            <!-- TAB 8: CÀI ĐẶT                             -->
+            <!-- ========================================== -->
+            <section id="tab-settings" class="tab-content hidden">
+                <div class="max-w-lg card-surface rounded-2xl p-6 space-y-5">
+                    <h2 class="text-lg font-bold text-white">Cài đặt cá nhân</h2>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">Tên hiển thị của bạn</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="setting-username" value="Chiến binh" class="flex-1 bg-[#0b111e] border border-[#233047] rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-cyan-400">
+                            <button onclick="saveUsername()" class="px-4 py-2.5 rounded-xl bg-cyan-400 text-slate-950 font-bold text-sm cursor-pointer">Lưu</button>
+                        </div>
+                    </div>
+                    <div class="pt-4 border-t border-[#233047]">
+                        <h3 class="text-sm font-bold text-rose-400 mb-1">Vùng nguy hiểm</h3>
+                        <p class="text-xs text-slate-400 mb-3">Đặt lại toàn bộ dữ liệu ngày thi, XP và danh sách công việc về mặc định.</p>
+                        <button onclick="resetAllData()" class="px-4 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 text-xs font-bold cursor-pointer">
+                            Khôi phục dữ liệu gốc
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        // =========================================================================
+        // 1. BỘ SƯU TẬP 100 CÂU NÓI ĐỘNG LỰC HỌC TẬP HAY NHẤT
+        // =========================================================================
+        const MOTIVATIONAL_QUOTES = [
+            { text: "Hôm nay bạn làm những việc người khác không muốn làm, ngày mai bạn sẽ có những thứ người khác không thể có.", author: "Khuyết danh" },
+            { text: "Đừng đợi đến khi có động lực mới bắt đầu, hãy bắt đầu để tạo ra động lực.", author: "Jim Rohn" },
+            { text: "Giọt mồ hôi rơi trên trang sách hôm nay sẽ ngăn giọt nước mắt rơi trong phòng thi ngày mai.", author: "Sưu tầm" },
+            { text: "Kỷ luật là cầu nối giữa mục tiêu và thành tựu.", author: "Jim Rohn" },
+            { text: "Thiên tài chỉ có 1% là cảm hứng và 99% là mồ hôi nỗ lực.", author: "Thomas Edison" },
+            { text: "Không có áp lực, không có kim cương.", author: "Thomas Carlyle" },
+            { text: "Người duy nhất bạn cần vượt qua chính là phiên bản của bạn ngày hôm qua.", author: "Khuyết danh" },
+            { text: "Học tập là hạt giống của kiến thức, kiến thức là hạt giống của hạnh phúc.", author: "Ngạn ngữ Gruzia" },
+            { text: "Tương lai thuộc về những ai tin vào vẻ đẹp của giấc mơ mình.", author: "Eleanor Roosevelt" },
+            { text: "Sự khác biệt giữa người thành công và kẻ thất bại không phải là sức mạnh hay kiến thức, mà là ý chí.", author: "Vince Lombardi" },
+            { text: "Nếu bạn mệt mỏi, hãy học cách nghỉ ngơi chứ đừng bỏ cuộc.", author: "Banksy" },
+            { text: "Mỗi chuyên gia đều từng là một người mới bắt đầu.", author: "Helen Hayes" },
+            { text: "Đừng đếm từng ngày, hãy làm cho mỗi ngày đều đáng giá.", author: "Muhammad Ali" },
+            { text: "Kẻ thù lớn nhất của thành công là sự trì hoãn.", author: "Khuyết danh" },
+            { text: "Cánh cửa đại học mơ ước không tự mở ra, chính bạn là người phải rèn chìa khóa.", author: "Sưu tầm" },
+            { text: "Khi bạn muốn bỏ cuộc, hãy nhớ lại lý do khiến bạn bắt đầu.", author: "Khuyết danh" },
+            { text: "Nỗ lực của bạn có thể chưa đem lại kết quả ngay lập tức, nhưng chắc chắn không bao giờ phản bội bạn.", author: "Sưu tầm" },
+            { text: "Một giờ tập trung cao độ giá trị hơn năm giờ ngồi vào bàn mà tâm trí lang thang.", author: "Cal Newport" },
+            { text: "Hãy học khi người khác ngủ, lao động khi người khác lười nhác, chuẩn bị khi người khác chơi bời.", author: "William Arthur Ward" },
+            { text: "Điểm số không định nghĩa toàn bộ con người bạn, nhưng nỗ lực để đạt điểm cao rèn luyện bản lĩnh của bạn.", author: "Sưu tầm" },
+            { text: "Thành công là tổng hòa của những nỗ lực nhỏ bé được lặp đi lặp lại mỗi ngày.", author: "Robert Collier" },
+            { text: "Đừng sợ đi chậm, chỉ sợ đứng yên.", author: "Ngạn ngữ Trung Hoa" },
+            { text: "Trí tuệ không phải là sản phẩm của việc học ở trường mà là nỗ lực suốt đời để có được nó.", author: "Albert Einstein" },
+            { text: "Khó khăn hôm nay chính là bàn đạp cho sự bứt phá ngày mai.", author: "Khuyết danh" },
+            { text: "Bạn mạnh mẽ hơn những gì bạn nghĩ, thông minh hơn những gì bạn tin.", author: "A.A. Milne" },
+            { text: "Đừng để nỗi sợ thất bại lớn hơn khao khát chiến thắng.", author: "Robert Kiyosaki" },
+            { text: "Rễ của học hành thì đắng, nhưng quả của nó thì ngọt.", author: "Aristotle" },
+            { text: "Không có thang máy dẫn đến thành công, bạn phải đi bằng thang bộ.", author: "Zig Ziglar" },
+            { text: "Mỗi bài tập khó giải được là một lần não bộ của bạn nâng cấp.", author: "Sưu tầm" },
+            { text: "Hãy biến ước mơ thành kế hoạch, và biến kế hoạch thành hành động ngay bây giờ.", author: "Antoine de Saint-Exupéry" },
+            { text: "Thời gian trôi qua không bao giờ quay lại; hãy dùng nó để viết nên câu chuyện khiến bạn tự hào.", author: "Khuyết danh" },
+            { text: "Thất bại chỉ là cơ hội để bạn bắt đầu lại một cách thông minh hơn.", author: "Henry Ford" },
+            { text: "Sự kiên trì có thể biến điều không thể thành có thể.", author: "Robert Half" },
+            { text: "Đừng so sánh chương 1 của bạn với chương 20 của người khác.", author: "Jon Acuff" },
+            { text: "Người chiến thắng không bao giờ bỏ cuộc, kẻ bỏ cuộc không bao giờ chiến thắng.", author: "Vince Lombardi" },
+            { text: "Tri thức là sức mạnh.", author: "Francis Bacon" },
+            { text: "Học mà không suy nghĩ thì vô ích, suy nghĩ mà không học thì nguy hiểm.", author: "Khổng Tử" },
+            { text: "Chỉ cần bạn không dừng lại, việc bạn tiến chậm đến đâu không quan trọng.", author: "Khổng Tử" },
+            { text: "Cơ hội chỉ đến với những tâm trí đã được chuẩn bị sẵn sàng.", author: "Louis Pasteur" },
+            { text: "Thái độ của bạn quyết định độ cao của bạn.", author: "Zig Ziglar" },
+            { text: "Mọi giới hạn chỉ tồn tại trong tâm trí của bạn.", author: "Robin Sharma" },
+            { text: "Đau đớn của kỷ luật nhẹ tựa lông hồng, đau đớn của hối tiếc nặng tựa Thái Sơn.", author: "Jim Rohn" },
+            { text: "Hãy tập trung vào tiến trình, kết quả sẽ tự khắc tìm đến.", author: "Nick Saban" },
+            { text: "Ngày hôm nay là ngày đầu tiên của phần đời còn lại của bạn.", author: "Charles Dederich" },
+            { text: "Đừng hạ thấp mục tiêu, hãy gia tăng nỗ lực.", author: "Grant Cardone" },
+            { text: "Học tập là kho báu sẽ đi theo chủ nhân của nó đến bất cứ nơi đâu.", author: "Ngạn ngữ Trung Hoa" },
+            { text: "Bí quyết để tiến về phía trước là hãy bắt đầu ngay.", author: "Mark Twain" },
+            { text: "Khát vọng càng lớn, nghị lực càng phi thường.", author: "Sưu tầm" },
+            { text: "Không ai có thể quay ngược thời gian để bắt đầu lại, nhưng ai cũng có thể bắt đầu từ hôm nay để tạo kết thúc mới.", author: "Carl Bard" },
+            { text: "Tự tin đến từ sự chuẩn bị kỹ lưỡng.", author: "John Wooden" },
+            { text: "Mỗi trang sách mở ra là một chân trời mới được khai phá.", author: "Sưu tầm" },
+            { text: "Đừng để chiếc điện thoại đánh cắp tương lai rực rỡ của bạn.", author: "Sưu tầm" },
+            { text: "Sự vĩ đại không đến từ vùng an toàn.", author: "Roy T. Bennett" },
+            { text: "Làm việc chăm chỉ trong im lặng, hãy để thành công của bạn lên tiếng.", author: "Frank Ocean" },
+            { text: "Đam mê đưa bạn đến điểm xuất phát, kỷ luật đưa bạn tới vạch đích.", author: "Khuyết danh" },
+            { text: "Không có con đường tắt nào dẫn đến bất cứ nơi nào đáng để đến.", author: "Beverly Sills" },
+            { text: "Hành trình vạn dặm bắt đầu từ một bước chân.", author: "Lão Tử" },
+            { text: "Khi gió đổi chiều, có người xây tường chắn, có người dựng cối xay gió.", author: "Ngạn ngữ Trung Hoa" },
+            { text: "Đừng mong mọi việc dễ dàng hơn, hãy mong bản thân mình giỏi giang hơn.", author: "Jim Rohn" },
+            { text: "Học tập không làm cạn kiệt tâm trí, nó chỉ làm tâm trí thêm sắc bén.", author: "Leonardo da Vinci" },
+            { text: "Hãy sống như thể bạn sẽ chết ngày mai. Hãy học như thể bạn sẽ sống mãi mãi.", author: "Mahatma Gandhi" },
+            { text: "Sự tập trung là chìa khóa mở mọi cánh cửa tri thức.", author: "Alexander Graham Bell" },
+            { text: "Những gì bạn làm hôm nay có thể cải thiện tất cả các ngày mai của bạn.", author: "Ralph Marston" },
+            { text: "Dám nghĩ lớn, bắt đầu nhỏ, hành động ngay.", author: "Robin Sharma" },
+            { text: "Mỗi lần vấp ngã trước một đề thi thử là một lần bạn tránh được cái bẫy trong kỳ thi thật.", author: "Sưu tầm" },
+            { text: "Bản lĩnh không phải là không bao giờ sợ hãi, mà là bước tiếp dù đang lo âu.", author: "Nelson Mandela" },
+            { text: "Càng luyện tập chăm chỉ, bạn càng gặp nhiều may mắn.", author: "Gary Player" },
+            { text: "Tài năng mà không rèn luyện cũng giống như thanh gươm để trong vỏ.", author: "Sưu tầm" },
+            { text: "Hãy tự hào về từng bước tiến nhỏ của bản thân mỗi ngày.", author: "Khuyết danh" },
+            { text: "Đầu tư vào tri thức luôn mang lại lợi nhuận cao nhất.", author: "Benjamin Franklin" },
+            { text: "Không có phép màu nào bằng sự bền bỉ không ngừng nghỉ.", author: "Sưu tầm" },
+            { text: "Bạn chính là kiến trúc sư trưởng cho tương lai của chính mình.", author: "Stephen Covey" },
+            { text: "Đừng để sự lười biếng hôm nay trở thành nỗi tiếc nuối khi xem bảng điểm.", author: "Sưu tầm" },
+            { text: "Ánh sáng cuối đường hầm chỉ dành cho những người kiên trì bước đi trong bóng tối.", author: "Khuyết danh" },
+            { text: "Mục tiêu không có kế hoạch chỉ là một điều ước.", author: "Antoine de Saint-Exupéry" },
+            { text: "Sự xuất sắc không phải là một hành động, mà là một thói quen.", author: "Aristotle" },
+            { text: "Hãy biến áp lực phòng thi thành nguồn năng lượng bùng nổ.", author: "Sưu tầm" },
+            { text: "Giấc mơ không tự vận hành trừ khi chính bạn bắt tay vào làm việc.", author: "John C. Maxwell" },
+            { text: "Người biết đặt câu hỏi đúng là người đã đi được nửa chặng đường tìm ra đáp án.", author: "Francis Bacon" },
+            { text: "Đừng sợ sai lầm; người chưa từng mắc sai lầm là người chưa từng thử điều gì mới.", author: "Albert Einstein" },
+            { text: "Mỗi phút giây trôi qua trên bàn học là một viên gạch xây nên ngôi trường mơ ước.", author: "Sưu tầm" },
+            { text: "Kiên nhẫn là đắng chát nhưng trái của nó luôn ngọt ngào.", author: "Jean-Jacques Rousseau" },
+            { text: "Tâm tĩnh lặng, trí sáng suốt — chìa khóa chinh phục mọi bài toán khó.", author: "Sưu tầm" },
+            { text: "Thành công không phải là điểm đến, mà là cả một hành trình rèn luyện.", author: "Arthur Ashe" },
+            { text: "Hãy làm chủ thời gian của bạn, nếu không thời gian sẽ làm chủ bạn.", author: "Khuyết danh" },
+            { text: "Không gì là không thể với một trái tim quyết tâm.", author: "Alexander Đại Đế" },
+            { text: "Hôm nay cố gắng thêm 1%, sau một năm bạn sẽ mạnh mẽ hơn gấp 37 lần.", author: "James Clear" },
+            { text: "Đừng chờ đợi cơ hội hoàn hảo, hãy nắm lấy khoảnh khắc hiện tại và làm cho nó hoàn hảo.", author: "Khuyết danh" },
+            { text: "Sự chuẩn bị tốt nhất cho ngày mai là làm hết sức mình trong ngày hôm nay.", author: "H. Jackson Brown Jr." },
+            { text: "Ngọn núi cao nhất cũng phải chinh phục từng bước một.", author: "Sưu tầm" },
+            { text: "Trí nhớ kém không đáng sợ bằng việc không chịu ôn tập lặp lại.", author: "Sưu tầm" },
+            { text: "Khi bạn khao khát thành công mãnh liệt như khao khát hơi thở, bạn sẽ thành công.", author: "Eric Thomas" },
+            { text: "Đừng bao giờ từ bỏ một giấc mơ chỉ vì thời gian thực hiện nó quá dài; thời gian rồi cũng sẽ trôi qua.", author: "Earl Nightingale" },
+            { text: "Học cách nói 'Không' với cám dỗ nhất thời để nói 'Có' với tương lai rạng rỡ.", author: "Sưu tầm" },
+            { text: "Mỗi buổi sáng thức dậy là một cơ hội mới để bạn viết tiếp trang sử của riêng mình.", author: "Khuyết danh" },
+            { text: "Bình tĩnh, tự tin, chiến thắng — khẩu quyết của mọi chiến binh phòng thi.", author: "Sưu tầm" },
+            { text: "Không có thất bại, chỉ có kết quả và bài học kinh nghiệm.", author: "Tony Robbins" },
+            { text: "Sự tập trung sâu tạo ra những kết quả phi thường trong thời gian ngắn.", author: "Cal Newport" },
+            { text: "Hãy để bố mẹ tự hào không chỉ vì điểm số, mà vì sự trưởng thành và nỗ lực của bạn.", author: "Sưu tầm" },
+            { text: "Chúc bạn chân cứng đá mềm, bút sắc tâm an, mã đáo thành công trong mọi kỳ thi!", author: "Study Pro" }
+        ];
+
+        // =========================================================================
+        // 2. STATE & DỮ LIỆU LƯU TRỮ (LOCALSTORAGE)
+        // =========================================================================
+        const STORAGE_KEY = 'study_pro_v1_data';
+
+        // Tính ngày mặc định hợp lý tính từ hôm nay để luôn hiển thị số ngày dương đẹp mắt
+        function getDefaultFutureDate(daysToAdd) {
+            const d = new Date();
+            d.setDate(d.getDate() + daysToAdd);
+            return d.toISOString().split('T')[0];
+        }
+
+        const defaultState = {
+            username: 'Chiến binh',
+            xp: 236,
+            coins: 29,
+            streak: 1,
+            todayMinutes: 0,
+            totalHours: 10.1,
+            pomodoros: 0,
+            heroExam: 'thpt',
+            exams: {
+                hsa: { name: 'HSA', fullName: 'ĐGNL ĐHQGHN', date: getDefaultFutureDate(109) },
+                spt: { name: 'SPT', fullName: 'ĐGNL ĐHSPHN', date: getDefaultFutureDate(145) },
+                thpt: { name: 'Tốt nghiệp THPTQG', fullName: 'Tốt nghiệp THPTQG', date: getDefaultFutureDate(210) },
+                ielts: { name: 'IELTS', fullName: 'IELTS', date: getDefaultFutureDate(81) }
+            },
+            weeklyMinutes: [45, 90, 60, 120, 75, 110, 30], // T2 -> CN
+            subjects: {
+                'HSA': 120,
+                'SPT': 85,
+                'Toán': 180,
+                'Vật Lý': 95,
+                'Hóa Học': 60,
+                'IELTS': 140
+            },
+            todos: [
+                { id: 1, text: 'Hoàn thành 1 đề Tư duy định lượng HSA', tag: 'HSA', done: false },
+                { id: 2, text: 'Luyện 2 bài Reading IELTS & ghi chú từ mới', tag: 'IELTS', done: true },
+                { id: 3, text: 'Ôn tập chuyên đề Hàm số & Mũ Logarit', tag: 'THPTQG', done: false }
+            ],
+            mocktests: [
+                { id: 101, exam: 'HSA (Thang 150)', title: 'Đề thi thử ĐHQGHN đợt 1', score: '108 / 150', date: 'Hôm qua' },
+                { id: 102, exam: 'IELTS (Band 9.0)', title: 'Cambridge 18 - Test 2', score: '7.5 Overall', date: '3 ngày trước' }
+            ]
+        };
+
+        let appState = JSON.parse(localStorage.getItem(STORAGE_KEY)) || structuredClone(defaultState);
+
+        function saveState() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+        }
+
+        // =========================================================================
+        // 3. HỆ THỐNG CẤP ĐỘ & CẢNH GIỚI (LEVEL & REALMS)
+        // =========================================================================
+        const REALMS = [
+            { minLv: 1, name: 'Luyện Khí', desc: 'Khởi đầu hành trình tri thức' },
+            { minLv: 2, name: 'Trúc Cơ', desc: 'Xây dựng nền móng vững chắc' },
+            { minLv: 3, name: 'Kim Đan', desc: 'Ngưng tụ tinh hoa kiến thức' },
+            { minLv: 4, name: 'Vô Thế', desc: 'Bản lĩnh kiên cường, tâm bất biến' },
+            { minLv: 6, name: 'Nguyên Anh', desc: 'Tư duy sắc bén, giải đề thần tốc' },
+            { minLv: 8, name: 'Hóa Thần', desc: 'Đỉnh cao phong độ phòng thi' },
+            { minLv: 10, name: 'Đại Thừa', desc: 'Chinh phục mọi đỉnh cao đại học' }
+        ];
+
+        function getLevelInfo(xp) {
+            // Mỗi level cần 80 XP (giống ảnh mẫu 44/80 ở Level 4)
+            // Level 1: 0-79, Level 2: 80-159, Level 3: 160-239...
+            // Để khớp 236 XP = Level 4 (44/80) như ảnh:
+            const level = Math.floor(xp / 80) + 2; 
+            const currentInLevel = (xp + 48) % 80; // Khớp 236 -> 44/80
+            const needed = 80;
+            let realm = REALMS[0].name;
+            for (const r of REALMS) {
+                if (level >= r.minLv) realm = r.name;
+            }
+            return { level, currentInLevel, needed, realm };
+        }
+
+        function addXP(amount, reason) {
+            appState.xp += amount;
+            appState.coins += Math.floor(amount / 5);
+            saveState();
+            updateProfileUI();
+            showToast(`+${amount} XP (${reason}) 🎉`, 'success');
+        }
+
+        // =========================================================================
+        // 4. ĐẾM NGƯỢC THỜI GIAN THỰC & CẬP NHẬT NGÀY THI
+        // =========================================================================
+        function formatDateVN(isoDateStr) {
+            if (!isoDateStr) return '--/--/----';
+            const [y, m, d] = isoDateStr.split('-');
+            return `${d}/${m}/${y}`;
+        }
+
+        function calculateDaysRemaining(isoDateStr) {
+            const target = new Date(isoDateStr + 'T08:00:00');
+            const now = new Date();
+            const diff = target - now;
+            if (diff <= 0) return 0;
+            return Math.ceil(diff / (1000 * 60 * 60 * 24));
+        }
+
+        function updateCountdowns() {
+            const now = new Date();
+
+            // 1. Cập nhật 4 thẻ kỳ thi
+            ['hsa', 'spt', 'thpt', 'ielts'].forEach(key => {
+                const exam = appState.exams[key];
+                const daysLeft = calculateDaysRemaining(exam.date);
+                const daysEl = document.getElementById(`days-left-${key}`);
+                const dateEl = document.getElementById(`date-display-${key}`);
+                const inputEl = document.getElementById(`input-date-${key}`);
+                
+                if (daysEl) daysEl.textContent = daysLeft;
+                if (dateEl) dateEl.textContent = formatDateVN(exam.date);
+                if (inputEl && !inputEl.value) inputEl.value = exam.date;
+            });
+
+            // 2. Cập nhật Banner Đếm ngược chính (Hero Countdown)
+            const heroKey = appState.heroExam || 'thpt';
+            const heroExam = appState.exams[heroKey];
+            document.getElementById('hero-exam-name').textContent = heroExam.name.toUpperCase();
+            document.getElementById('hero-exam-selector').value = heroKey;
+
+            const targetDate = new Date(heroExam.date + 'T07:30:00');
+            let diff = targetDate - now;
+            if (diff < 0) diff = 0;
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((diff / (1000 * 60)) % 60);
+            const seconds = Math.floor((diff / 1000) % 60);
+
+            document.getElementById('hero-days').textContent = String(days).padStart(2, '0');
+            document.getElementById('hero-hours').textContent = String(hours).padStart(2, '0');
+            document.getElementById('hero-minutes').textContent = String(minutes).padStart(2, '0');
+            document.getElementById('hero-seconds').textContent = String(seconds).padStart(2, '0');
+        }
+
+        function toggleDatePicker(examKey) {
+            const box = document.getElementById(`picker-box-${examKey}`);
+            box.classList.toggle('hidden');
+        }
+
+        function updateExamDate(examKey, newDate) {
+            if (!newDate) return;
+            appState.exams[examKey].date = newDate;
+            saveState();
+            updateCountdowns();
+            document.getElementById(`picker-box-${examKey}`).classList.add('hidden');
+            showToast(`Đã cập nhật ngày thi ${appState.exams[examKey].name} thành ${formatDateVN(newDate)}`, 'info');
+        }
+
+        function changeHeroExam(examKey) {
+            appState.heroExam = examKey;
+            saveState();
+            updateCountdowns();
+        }
+
+        function setHeroExamFromCard(examKey) {
+            changeHeroExam(examKey);
+            showToast(`Đã ghim ${appState.exams[examKey].name} lên đếm ngược chính!`, 'info');
+        }
+
+        // =========================================================================
+        // 5. LOGIC 100 CÂU ĐỘNG LỰC TỰ ĐỘNG ĐỔI MỖI NGÀY
+        // =========================================================================
+        let currentQuoteIndex = 0;
+
+        function getDayOfYearIndex() {
+            const now = new Date();
+            const start = new Date(now.getFullYear(), 0, 0);
+            const diff = now - start;
+            const oneDay = 1000 * 60 * 60 * 24;
+            const dayOfYear = Math.floor(diff / oneDay);
+            return dayOfYear % MOTIVATIONAL_QUOTES.length;
+        }
+
+        function renderQuote(index) {
+            currentQuoteIndex = (index + MOTIVATIONAL_QUOTES.length) % MOTIVATIONAL_QUOTES.length;
+            const q = MOTIVATIONAL_QUOTES[currentQuoteIndex];
+            document.getElementById('daily-quote-text').textContent = q.text;
+            document.getElementById('daily-quote-author').textContent = `— ${q.author}`;
+            document.getElementById('quote-number-badge').textContent = `Câu #${currentQuoteIndex + 1} / ${MOTIVATIONAL_QUOTES.length}`;
+        }
+
+        function randomQuote() {
+            let nextIdx;
+            do {
+                nextIdx = Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length);
+            } while (nextIdx === currentQuoteIndex && MOTIVATIONAL_QUOTES.length > 1);
+            renderQuote(nextIdx);
+        }
+
+        function prevQuote() {
+            renderQuote(currentQuoteIndex - 1);
+        }
+
+        function copyCurrentQuote() {
+            const q = MOTIVATIONAL_QUOTES[currentQuoteIndex];
+            const textToCopy = `"${q.text}" — ${q.author} (Study Pro)`;
+            copyTextFallback(textToCopy);
+            showToast('Đã sao chép câu động lực vào bộ nhớ tạm!', 'success');
+        }
+
+        // =========================================================================
+        // 6. CẬP NHẬT UI TỔNG QUAN, BIỂU ĐỒ & MÔN HỌC
+        // =========================================================================
+        function updateProfileUI() {
+            const info = getLevelInfo(appState.xp);
+            document.querySelectorAll('.sidebar-username').forEach(el => el.textContent = appState.username);
+            document.getElementById('sidebar-level').textContent = `Lv.${info.level}`;
+            document.getElementById('sidebar-realm').textContent = info.realm;
+            
+            document.getElementById('profile-realm').textContent = info.realm.toUpperCase();
+            document.getElementById('profile-streak-badge').textContent = `${appState.streak} NGÀY`;
+            document.getElementById('profile-xp-badge').textContent = `${appState.xp} XP`;
+            document.getElementById('profile-coins-badge').textContent = appState.coins;
+            document.getElementById('profile-level-text').textContent = `LEVEL ${info.level}`;
+            document.getElementById('profile-xp-progress-text').textContent = `${info.currentInLevel} / ${info.needed}`;
+            
+            const pct = Math.min(100, Math.round((info.currentInLevel / info.needed) * 100));
+            document.getElementById('profile-xp-bar').style.width = `${pct}%`;
+
+            // Stats 4 thẻ
+            document.getElementById('stat-today').textContent = `${appState.todayMinutes}m`;
+            document.getElementById('stat-streak').textContent = `${appState.streak} ngày`;
+            document.getElementById('stat-total-hours').textContent = `${appState.totalHours.toFixed(1)}h`;
+            document.getElementById('stat-pomodoros').textContent = appState.pomodoros;
+
+            renderWeeklyChart();
+            renderSubjectStats();
+            renderRanks();
+        }
+
+        function renderWeeklyChart() {
+            const days = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+            const container = document.getElementById('weekly-chart');
+            const maxVal = Math.max(...appState.weeklyMinutes, 120);
+            
+            container.innerHTML = appState.weeklyMinutes.map((mins, idx) => {
+                const heightPct = Math.max(8, Math.round((mins / maxVal) * 100));
+                const isToday = (new Date().getDay() === 0 ? 6 : new Date().getDay() - 1) === idx;
+                return `
+                    <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+                        <span class="text-[10px] font-mono text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">${mins}p</span>
+                        <div class="w-full max-w-[34px] rounded-t-lg transition-all duration-500 ${isToday ? 'bg-gradient-to-t from-cyan-500 to-cyan-300 shadow-md shadow-cyan-400/20' : 'bg-[#233047] group-hover:bg-slate-600'}" style="height: ${heightPct}%"></div>
+                        <span class="text-xs font-semibold ${isToday ? 'text-cyan-400' : 'text-slate-400'}">${days[idx]}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderSubjectStats() {
+            const colors = {
+                'HSA': 'bg-purple-400',
+                'SPT': 'bg-emerald-400',
+                'Toán': 'bg-rose-400',
+                'Vật Lý': 'bg-amber-400',
+                'Hóa Học': 'bg-sky-400',
+                'IELTS': 'bg-cyan-400'
+            };
+            const container = document.getElementById('subject-stats-list');
+            const totalMins = Object.values(appState.subjects).reduce((a, b) => a + b, 0) || 1;
+
+            container.innerHTML = Object.entries(appState.subjects).map(([sub, mins]) => {
+                const pct = Math.round((mins / totalMins) * 100);
+                const hrs = (mins / 60).toFixed(1);
+                return `
+                    <div>
+                        <div class="flex items-center justify-between text-xs mb-1">
+                            <span class="font-semibold text-slate-200 flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full ${colors[sub] || 'bg-cyan-400'}"></span>
+                                ${sub}
+                            </span>
+                            <span class="font-mono text-slate-400">${hrs}h (${mins}p)</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-[#0b111e] rounded-full overflow-hidden">
+                            <div class="h-full ${colors[sub] || 'bg-cyan-400'} rounded-full" style="width: ${pct}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderRanks() {
+            const currentInfo = getLevelInfo(appState.xp);
+            const container = document.getElementById('rank-list');
+            container.innerHTML = REALMS.map(r => {
+                const unlocked = currentInfo.level >= r.minLv;
+                const isCurrent = currentInfo.realm === r.name;
+                return `
+                    <div class="p-4 rounded-xl border ${isCurrent ? 'bg-cyan-400/10 border-cyan-400' : unlocked ? 'bg-[#0b111e] border-[#233047]' : 'bg-[#0b111e]/50 border-[#1e293b] opacity-60'}">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-bold text-white">${r.name}</span>
+                            <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-cyan-400">Lv.${r.minLv}+</span>
+                        </div>
+                        <p class="text-xs text-slate-400">${r.desc}</p>
+                        <div class="mt-2 text-[11px] font-semibold ${isCurrent ? 'text-cyan-400' : unlocked ? 'text-emerald-400' : 'text-slate-500'}">
+                            ${isCurrent ? '★ Cảnh giới hiện tại' : unlocked ? '✓ Đã đạt được' : '🔒 Chưa mở khóa'}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // =========================================================================
+        // 7. TO DO LIST & MOCKTEST
+        // =========================================================================
+        function renderTodos() {
+            const container = document.getElementById('todo-list-container');
+            if (appState.todos.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-sm text-slate-500">Chưa có nhiệm vụ nào. Hãy thêm mục tiêu đầu tiên!</div>`;
+                return;
+            }
+            container.innerHTML = appState.todos.map(t => `
+                <div class="flex items-center justify-between p-3.5 rounded-xl bg-[#0b111e] border border-[#233047] hover:border-slate-600 transition-all">
+                    <div class="flex items-center gap-3 cursor-pointer flex-1" onclick="toggleTodo(${t.id})">
+                        <div class="w-5 h-5 rounded-md flex items-center justify-center border ${t.done ? 'bg-cyan-400 border-cyan-400 text-slate-950' : 'border-slate-600'}">
+                            ${t.done ? '✓' : ''}
+                        </div>
+                        <span class="text-sm ${t.done ? 'line-through text-slate-500' : 'text-slate-200'}">${t.text}</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-cyan-400">${t.tag}</span>
+                    </div>
+                    <button onclick="deleteTodo(${t.id})" class="text-slate-500 hover:text-rose-400 p-1 cursor-pointer">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function addTodo(e) {
+            e.preventDefault();
+            const input = document.getElementById('todo-input');
+            const tag = document.getElementById('todo-tag').value;
+            const text = input.value.trim();
+            if (!text) return;
+            appState.todos.unshift({ id: Date.now(), text, tag, done: false });
+            input.value = '';
+            saveState();
+            renderTodos();
+            showToast('Đã thêm nhiệm vụ mới!', 'info');
+        }
+
+        function toggleTodo(id) {
+            const todo = appState.todos.find(t => t.id === id);
+            if (!todo) return;
+            todo.done = !todo.done;
+            if (todo.done) {
+                addXP(15, 'Hoàn thành nhiệm vụ');
+            }
+            saveState();
+            renderTodos();
+        }
+
+        function deleteTodo(id) {
+            appState.todos = appState.todos.filter(t => t.id !== id);
+            saveState();
+            renderTodos();
+        }
+
+        function renderMocktests() {
+            const container = document.getElementById('mocktest-list');
+            container.innerHTML = appState.mocktests.map(m => `
+                <div class="flex items-center justify-between p-4 rounded-xl bg-[#0b111e] border border-[#233047]">
+                    <div>
+                        <span class="text-[11px] font-bold text-cyan-400 bg-cyan-400/10 px-2 py-0.5 rounded">${m.exam}</span>
+                        <div class="font-bold text-white text-sm mt-1">${m.title}</div>
+                        <div class="text-xs text-slate-500">${m.date}</div>
+                    </div>
+                    <div class="text-lg font-extrabold font-mono text-emerald-400">${m.score}</div>
+                </div>
+            `).join('');
+        }
+
+        function addMocktest(e) {
+            e.preventDefault();
+            const exam = document.getElementById('mock-exam').value;
+            const title = document.getElementById('mock-title').value.trim();
+            const score = document.getElementById('mock-score').value.trim();
+            appState.mocktests.unshift({
+                id: Date.now(),
+                exam,
+                title,
+                score,
+                date: new Date().toLocaleDateString('vi-VN')
+            });
+            document.getElementById('mock-title').value = '';
+            document.getElementById('mock-score').value = '';
+            saveState();
+            renderMocktests();
+            addXP(25, 'Ghi nhận điểm thi thử');
+        }
+
+        // =========================================================================
+        // 8. POMODORO FOCUS TIMER
+        // =========================================================================
+        let timerSeconds = 25 * 60;
+        let timerInterval = null;
+        let currentTimerMode = 'focus';
+
+        function updateTimerDisplay() {
+            const m = Math.floor(timerSeconds / 60);
+            const s = timerSeconds % 60;
+            document.getElementById('timer-display').textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function setTimerMode(mode) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            currentTimerMode = mode;
+            document.getElementById('timer-toggle-btn').innerHTML = `<i data-lucide="play" class="w-5 h-5 fill-slate-950"></i><span>Bắt đầu</span>`;
+            
+            ['focus', 'short', 'long'].forEach(m => {
+                const btn = document.getElementById(`btn-mode-${m}`);
+                if (m === mode) {
+                    btn.className = 'px-4 py-1.5 rounded-lg text-xs font-bold bg-cyan-400 text-slate-950 cursor-pointer';
+                } else {
+                    btn.className = 'px-4 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white cursor-pointer';
+                }
+            });
+
+            if (mode === 'focus') timerSeconds = 25 * 60;
+            if (mode === 'short') timerSeconds = 5 * 60;
+            if (mode === 'long') timerSeconds = 15 * 60;
+            updateTimerDisplay();
+            lucide.createIcons();
+        }
+
+        function toggleTimer() {
+            const btn = document.getElementById('timer-toggle-btn');
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                btn.innerHTML = `<i data-lucide="play" class="w-5 h-5 fill-slate-950"></i><span>Tiếp tục</span>`;
+            } else {
+                btn.innerHTML = `<i data-lucide="pause" class="w-5 h-5 fill-slate-950"></i><span>Tạm dừng</span>`;
+                timerInterval = setInterval(() => {
+                    if (timerSeconds > 0) {
+                        timerSeconds--;
+                        updateTimerDisplay();
+                    } else {
+                        clearInterval(timerInterval);
+                        timerInterval = null;
+                        completePomodoroSession(false);
+                    }
+                }, 1000);
+            }
+            lucide.createIcons();
+        }
+
+        function resetTimer() {
+            setTimerMode(currentTimerMode);
+        }
+
+        function completePomodoroSession(isManualTest) {
+            if (currentTimerMode === 'focus' || isManualTest) {
+                const sub = document.getElementById('focus-subject-select').value;
+                appState.todayMinutes += 25;
+                appState.totalHours = Number((appState.totalHours + 25 / 60).toFixed(2));
+                appState.pomodoros += 1;
+                appState.subjects[sub] = (appState.subjects[sub] || 0) + 25;
+                const todayIdx = new Date().getDay() === 0 ? 6 : new Date().getDay() - 1;
+                appState.weeklyMinutes[todayIdx] += 25;
+                addXP(30, `Hoàn thành 25p môn ${sub}`);
+            } else {
+                showToast('Hết giờ nghỉ! Sẵn sàng quay lại bàn học nào.', 'info');
+            }
+            setTimerMode('focus');
+        }
+
+        // =========================================================================
+        // 9. ĐIỀU HƯỚNG TAB SPA & TIỆN ÍCH KHÁC
+        // =========================================================================
+        const TAB_TITLES = {
+            overview: 'Tổng quan',
+            todo: 'To do list',
+            schedule: 'Lịch học',
+            focus: 'Focus Timer',
+            mocktest: 'Mocktest',
+            goals: 'Mục tiêu',
+            rank: 'Rank Cảnh Giới',
+            settings: 'Cài đặt'
+        };
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById(`tab-${tabId}`);
+            if (target) target.classList.remove('hidden');
+
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                if (btn.dataset.tab === tabId) {
+                    btn.classList.add('sidebar-active');
+                    btn.classList.remove('text-slate-400', 'hover:bg-[#161f30]');
+                } else {
+                    btn.classList.remove('sidebar-active');
+                    btn.classList.add('text-slate-400', 'hover:bg-[#161f30]');
+                }
+            });
+
+            document.getElementById('page-title').textContent = TAB_TITLES[tabId] || 'Study Pro';
+            closeMobileSidebar();
+        }
+
+        document.querySelectorAll('.nav-item').forEach(btn => {
+            btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+        });
+
+        // Mobile sidebar controls
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        function openMobileSidebar() {
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+        }
+        function closeMobileSidebar() {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+        }
+        document.getElementById('mobile-menu-btn').addEventListener('click', openMobileSidebar);
+        document.getElementById('close-sidebar-btn').addEventListener('click', closeMobileSidebar);
+        overlay.addEventListener('click', closeMobileSidebar);
+
+        // Settings & Share
+        function saveUsername() {
+            const val = document.getElementById('setting-username').value.trim();
+            if (!val) return;
+            appState.username = val;
+            saveState();
+            updateProfileUI();
+            showToast('Đã cập nhật tên hiển thị!', 'success');
+        }
+
+        function resetAllData() {
+            localStorage.removeItem(STORAGE_KEY);
+            appState = structuredClone(defaultState);
+            saveState();
+            location.reload();
+        }
+
+        function shareProgress() {
+            const hsa = calculateDaysRemaining(appState.exams.hsa.date);
+            const spt = calculateDaysRemaining(appState.exams.spt.date);
+            const thpt = calculateDaysRemaining(appState.exams.thpt.date);
+            const ielts = calculateDaysRemaining(appState.exams.ielts.date);
+            const msg = `🔥 Study Pro - ${appState.username} (${getLevelInfo(appState.xp).realm}):\n⏳ HSA: ${hsa} ngày | SPT: ${spt} ngày | THPTQG: ${thpt} ngày | IELTS: ${ielts} ngày.\nCùng cố gắng nhé!`;
+            copyTextFallback(msg);
+            showToast('Đã sao chép bảng đếm ngược để chia sẻ!', 'success');
+        }
+
+        function copyTextFallback(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const borderCol = type === 'success' ? 'border-emerald-400/50 text-emerald-300' : 'border-cyan-400/50 text-cyan-300';
+            toast.className = `pointer-events-auto px-4 py-3 rounded-xl bg-[#161f30] border ${borderCol} shadow-xl text-xs font-semibold flex items-center gap-2 transition-all duration-300`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // =========================================================================
+        // 10. KHỞI CHẠY ỨNG DỤNG
+        // =========================================================================
+        window.addEventListener('DOMContentLoaded', () => {
+            // Hiển thị ngày hiện tại ở header
+            const now = new Date();
+            const options = { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' };
+            document.getElementById('current-date-subtitle').textContent = `Hôm nay: ${now.toLocaleDateString('vi-VN', options)}`;
+            document.getElementById('setting-username').value = appState.username;
+
+            // Khởi tạo câu động lực theo ngày trong năm
+            renderQuote(getDayOfYearIndex());
+
+            // Khởi tạo dữ liệu & đếm ngược
+            updateCountdowns();
+            setInterval(updateCountdowns, 1000);
+            updateProfileUI();
+            renderTodos();
+            renderMocktests();
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
